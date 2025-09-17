@@ -86,5 +86,5 @@ Y de contar con un archivo `credentials.json` con el siguiente formato:
 
 ## 🧑‍💻 Autor
 
-Desarrollado por [Federico Colombo](https://www.linkedin.com/in/fedecolombo/) como asistente interno de IA con conocimiento símil RAG.
+Desarrollado por [Federico Colombo](https://www.linkedin.com/in/federcolombo/) como asistente interno de IA con conocimiento símil RAG.
 Proyecto modular y escalable.
