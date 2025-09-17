@@ -1,0 +1,29 @@
+# Entorno virtual
+.venv/
+
+# Configuración de entorno / claves API
+.env
+credentials.json
+
+# Archivos generados por Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Archivos temporales de Streamlit o ejecución local
+.streamlit/
+*.log
+*.db
+*.sqlite
+
+# Archivos de historial generados automáticamente
+historial_*.json
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de backup de editores
+*.bak
+*.swp
+*.tmp
