@@ -6,8 +6,13 @@ import json
 from dotenv import load_dotenv
 
 # --- Configuración de Autenticación ---
-with open("credentials.json", "r") as f:
-    CREDENTIALS = json.load(f)
+if os.getenv("CREDENTIALS_JSON"):
+    # Si está definida como variable de entorno (ej. en Streamlit Cloud)
+    CREDENTIALS = json.loads(os.getenv("CREDENTIALS_JSON"))
+else:
+    # Si estás trabajando en local, leé desde el archivo
+    with open("credentials.json", "r") as f:
+        CREDENTIALS = json.load(f)
 
 # Cargar variables de entorno
 load_dotenv()
