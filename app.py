@@ -31,11 +31,10 @@ def load_css(file_path):
 # Función para extraer texto robusto del mensaje
 def extract_message_text(msg):
     """
-    Extrae el contenido de texto plano del mensaje (soporta múltiples formatos y versiones del SDK).
+    Extrae texto robustamente desde diferentes formatos del mensaje (SDK viejo y nuevo).
     """
     try:
         if hasattr(msg, "content"):
-            # Para nuevas versiones: msg.content es lista de bloques
             if isinstance(msg.content, list):
                 return "\n\n".join([
                     block.text.value if hasattr(block, "text") else str(block)
@@ -46,7 +45,6 @@ def extract_message_text(msg):
             else:
                 return str(msg.content)
         elif isinstance(msg, dict) and "content" in msg:
-            # Compatibilidad con versiones anteriores (local)
             content = msg["content"]
             if isinstance(content, list):
                 for part in content:
@@ -62,39 +60,46 @@ def extract_message_text(msg):
 # Función para guardar el historial de chat
 def save_history(username):
     """
-    Guarda el historial de mensajes en formato JSON plano.
-    Convierte cualquier estructura no serializable (como objetos OpenAI) en texto.
+    Guarda solo contenido serializable del historial para evitar errores.
     """
-    messages_to_save = []
+    cleaned_messages = []
 
     for msg in st.session_state.messages:
-        # Soporta ambos: dict (de usuario) o OpenAI object
         role = msg.get("role") if isinstance(msg, dict) else getattr(msg, "role", "assistant")
-
-        # Extrae texto plano, sin errores
-        if isinstance(msg, dict):
-            content = msg.get("content", "")
-        else:
-            try:
+        
+        try:
+            if isinstance(msg, dict):
+                content = msg.get("content", "")
+            else:
+                # Objeto complejo → convertir a string plano
                 content = extract_message_text(msg)
-            except Exception as e:
-                content = f"[Error al procesar mensaje: {e}]"
+        except Exception as e:
+            content = f"[Error al convertir contenido: {e}]"
 
-        messages_to_save.append({
-            "role": role,
-            "content": content
+        # Forzar contenido a string final
+        cleaned_messages.append({
+            "role": str(role),
+            "content": str(content)
         })
 
-    # Guardar como JSON plano
+    # Guardar en JSON solo texto puro
     with open(f"historial_{username}.json", "w") as f:
-        json.dump(messages_to_save, f)
+        json.dump(cleaned_messages, f)
 
-# Función para cargar el historial de chat
 def load_history(username):
-    if os.path.exists(f"historial_{username}.json"):
-        with open(f"historial_{username}.json", "r") as f:
-            st.session_state.messages = json.load(f)
-    else:
+    """
+    Carga el historial del usuario desde archivo JSON.
+    Si el archivo no existe o está corrupto, inicializa vacío.
+    """
+    try:
+        path = f"historial_{username}.json"
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                st.session_state.messages = json.load(f)
+        else:
+            st.session_state.messages = []
+    except Exception as e:
+        st.warning(f"No se pudo cargar el historial: {e}")
         st.session_state.messages = []
 
 # ----------------- INICIO DE LA APLICACIÓN -----------------
