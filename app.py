@@ -185,8 +185,9 @@ else:
                     break
                 time.sleep(1)
 
+            # Obtener la última respuesta del asistente
             messages = openai.beta.threads.messages.list(thread_id=st.session_state.thread_id)
-            ai_response = messages.data[0].content
+            ai_response = extract_message_text(messages.data[0])  # ← usa la función robusta
 
         st.session_state.messages.append({"role": "assistant", "content": ai_response})
 
