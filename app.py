@@ -31,29 +31,34 @@ def load_css(file_path):
 # Función para extraer texto robusto del mensaje
 def extract_message_text(msg):
     """
-    Extrae texto robustamente desde diferentes formatos del mensaje (SDK viejo y nuevo).
+    Extrae texto robustamente desde diferentes formatos del mensaje,
+    compatible con objetos OpenAI AssistantMessage y dicts.
     """
     try:
+        # Caso 1: objeto OpenAI con .content (lista de bloques)
         if hasattr(msg, "content"):
-            if isinstance(msg.content, list):
-                return "\n\n".join([
-                    block.text.value if hasattr(block, "text") else str(block)
-                    for block in msg.content
-                ])
-            elif hasattr(msg.content, "text"):
-                return msg.content.text.value
-            else:
-                return str(msg.content)
-        elif isinstance(msg, dict) and "content" in msg:
-            content = msg["content"]
+            blocks = msg.content
+            if isinstance(blocks, list):
+                texts = []
+                for block in blocks:
+                    if hasattr(block, "text"):
+                        texts.append(block.text.value)
+                return "\n\n".join(texts)
+            return str(blocks)
+
+        # Caso 2: mensaje como dict tradicional
+        elif isinstance(msg, dict):
+            content = msg.get("content", "")
             if isinstance(content, list):
+                texts = []
                 for part in content:
-                    if part.get("type") == "text":
-                        return part["text"]["value"]
-                return "[Mensaje sin texto]"
-            return content
-        else:
-            return "[Mensaje sin contenido]"
+                    if isinstance(part, dict) and part.get("type") == "text":
+                        texts.append(part["text"]["value"])
+                return "\n\n".join(texts)
+            return str(content)
+
+        return "[Mensaje vacío]"
+    
     except Exception as e:
         return f"[Error al leer mensaje: {e}]"
 
