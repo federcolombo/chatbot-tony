@@ -62,21 +62,30 @@ def extract_message_text(msg):
 # Función para guardar el historial de chat
 def save_history(username):
     """
-    Guarda el historial de mensajes como JSON, asegurando que todo sea serializable.
+    Guarda el historial de mensajes en formato JSON plano.
+    Convierte cualquier estructura no serializable (como objetos OpenAI) en texto.
     """
     messages_to_save = []
+
     for msg in st.session_state.messages:
+        # Soporta ambos: dict (de usuario) o OpenAI object
+        role = msg.get("role") if isinstance(msg, dict) else getattr(msg, "role", "assistant")
+
+        # Extrae texto plano, sin errores
         if isinstance(msg, dict):
             content = msg.get("content", "")
         else:
-            # Cuando viene de OpenAI, puede ser un objeto AssistantMessage
-            content = extract_message_text(msg)
+            try:
+                content = extract_message_text(msg)
+            except Exception as e:
+                content = f"[Error al procesar mensaje: {e}]"
 
         messages_to_save.append({
-            "role": msg["role"] if isinstance(msg, dict) else msg.role,
+            "role": role,
             "content": content
         })
 
+    # Guardar como JSON plano
     with open(f"historial_{username}.json", "w") as f:
         json.dump(messages_to_save, f)
 
