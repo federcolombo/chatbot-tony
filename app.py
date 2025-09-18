@@ -30,14 +30,34 @@ def load_css(file_path):
 
 # Función para extraer texto robusto del mensaje
 def extract_message_text(msg):
-    """Devuelve texto plano o procesa estructura compleja de Assistant si es una lista."""
-    content = msg.get("content")
-    if isinstance(content, list):
-        for part in content:
-            if part.get("type") == "text":
-                return part["text"]["value"]
-        return "[Mensaje sin texto]"
-    return content
+    """
+    Extrae el contenido de texto plano del mensaje (soporta múltiples formatos y versiones del SDK).
+    """
+    try:
+        if hasattr(msg, "content"):
+            # Para nuevas versiones: msg.content es lista de bloques
+            if isinstance(msg.content, list):
+                return "\n\n".join([
+                    block.text.value if hasattr(block, "text") else str(block)
+                    for block in msg.content
+                ])
+            elif hasattr(msg.content, "text"):
+                return msg.content.text.value
+            else:
+                return str(msg.content)
+        elif isinstance(msg, dict) and "content" in msg:
+            # Compatibilidad con versiones anteriores (local)
+            content = msg["content"]
+            if isinstance(content, list):
+                for part in content:
+                    if part.get("type") == "text":
+                        return part["text"]["value"]
+                return "[Mensaje sin texto]"
+            return content
+        else:
+            return "[Mensaje sin contenido]"
+    except Exception as e:
+        return f"[Error al leer mensaje: {e}]"
 
 # Función para guardar el historial de chat
 def save_history(username):
